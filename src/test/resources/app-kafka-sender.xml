@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:property-placeholder location="classpath:kafka.properties" ignore-unresolvable="true" />
+
+	<!-- 发送端配置 -->
+	<util:map id="kafkaProducerProperties">
+		<entry key="key.serializer" value="org.apache.kafka.common.serialization.StringSerializer"></entry>
+		<entry key="value.serializer" value="org.apache.kafka.common.serialization.StringSerializer"></entry>
+		<entry key="metadata.max.age.ms" value="#{60 * 1000}"></entry>
+		<entry key="bootstrap.servers" value="${kafka.broker.address}"></entry>
+	</util:map>
+
+	<bean id="kafkaProducer" class="org.apache.kafka.clients.producer.KafkaProducer">
+		<constructor-arg name="configs" ref="kafkaProducerProperties"></constructor-arg>
+	</bean>
+
+	<bean id="kafkaMessageSender" class="com.huoli.kafka.KafkaMessageSender">
+		<property name="kafkaProducer" ref="kafkaProducer"></property>
+		<property name="topic" value="${kafka.topic}"></property>
+	</bean>
+
+
+</beans>

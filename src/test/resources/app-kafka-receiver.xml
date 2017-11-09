@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:property-placeholder location="classpath:kafka.properties" ignore-unresolvable="true" />
+
+
+	<!-- 自动应答的开关 -->
+	<bean id="autoCommit" class="java.lang.Boolean">
+		<constructor-arg value="false"></constructor-arg>
+	</bean>
+
+	<util:map id="kafkaProperties">
+		<entry key="group.id" value="${kafka.group.id}"></entry>
+		<entry key="key.deserializer" value="org.apache.kafka.common.serialization.StringDeserializer"></entry>
+		<entry key="value.deserializer" value="org.apache.kafka.common.serialization.StringDeserializer"></entry>
+		<entry key="metadata.max.age.ms" value="#{60 * 1000}"></entry>
+		<entry key="bootstrap.servers" value="${kafka.broker.address}"></entry>
+		<!-- 是否开启消息消费后自动提交,默认为开启 -->
+		<entry key="enable.auto.commit" value="#{autoCommit}"></entry>
+		<!-- 自动提交间隔的时间,默认为5000毫秒 -->
+		<entry key="auto.commit.interval.ms" value="5000"></entry>
+	</util:map>
+
+	<bean id="kafkaConsumer" class="org.apache.kafka.clients.consumer.KafkaConsumer">
+		<constructor-arg name="configs" ref="kafkaProperties"></constructor-arg>
+	</bean>
+
+	<bean id="kafkaMessageHandler" class="com.huoli.test.CustomKafkaMessageHandler"></bean>
+
+	<bean id="kafkaMessageReceiver" class="com.huoli.kafka.KafkaMessageReceiver" init-method="init">
+		<property name="kafkaConsumer" ref="kafkaConsumer"></property>
+		<property name="autoCommit" value="#{autoCommit}"></property>
+		<property name="kafkaMessageHandler" ref="kafkaMessageHandler"></property>
+		<property name="topic" value="${kafka.topic}"></property>
+	</bean>
+
+
+
+
+
+</beans>
